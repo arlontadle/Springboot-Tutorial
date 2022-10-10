@@ -1,4 +1,4 @@
-package miniproject;
+package myproject.module;
 
 
 public class MainRunner {

@@ -1,4 +1,4 @@
-package miniproject.util;
+package myproject.util;
 
 public class ProjectConstant {
 

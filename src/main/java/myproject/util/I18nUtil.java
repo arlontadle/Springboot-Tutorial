@@ -1,4 +1,4 @@
-package miniproject.util;
+package myproject.util;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;

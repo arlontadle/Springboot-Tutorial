@@ -1,4 +1,4 @@
-package miniproject.annotations;
+package myproject.annotations;
 
 import java.lang.annotation.*;
 

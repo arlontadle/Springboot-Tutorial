@@ -1,4 +1,4 @@
-package miniproject.util;
+package myproject.util;
 
 import java.util.HashMap;
 import java.util.Map;

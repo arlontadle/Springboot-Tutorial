@@ -1,7 +1,7 @@
-package miniproject.util;
+package myproject.util;
 
-import miniproject.MainRunner;
-import miniproject.annotations.ExcelColumn;
+import myproject.module.MainRunner;
+import myproject.annotations.ExcelColumn;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.CharUtils;

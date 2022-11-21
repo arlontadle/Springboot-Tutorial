@@ -1,6 +1,6 @@
 package myproject.util;
 
-import myproject.module.MainRunner;
+import lombok.extern.slf4j.Slf4j;
 import myproject.annotations.ExcelColumn;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
@@ -12,8 +12,6 @@ import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.hibernate.service.spi.ServiceException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -34,9 +32,12 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * @author arlund
+ */
+@Slf4j
 public class ExcelUtils {
 
-    private static final Logger log = LoggerFactory.getLogger(MainRunner.class);
     private static final String EXCEL2003 = "xls";
     private static final String EXCEL2007 = "xlsx";
 
@@ -46,6 +47,7 @@ public class ExcelUtils {
             throw new ServiceException("No files have been selected");
         }
         String fileName = file.getOriginalFilename();
+
         if (!fileName.matches("^.+\\.(?i)(xls)$") && !fileName.matches("^.+\\.(?i)(xlsx)$")) {
             throw new ServiceException("The uploaded file is not in the correct format\n");
         }
@@ -65,8 +67,8 @@ public class ExcelUtils {
                 workbook = new HSSFWorkbook(is);
             }
             if (workbook != null) {
-                //类映射  注解 value-->bean columns
-                Map<String, List<Field>> classMap = new HashMap<>();
+                //Class Map annotations value-->bean columns
+                Map<String, List<Field>> classMap = new HashMap<>(0);
                 List<Field> fields = Stream.of(cls.getDeclaredFields()).collect(Collectors.toList());
                 fields.forEach(
                         field -> {
@@ -74,7 +76,7 @@ public class ExcelUtils {
                             if (annotation != null) {
                                 String value = replaceBlank(annotation.value());
                                 if (StringUtils.isBlank(value)) {
-                                    return;//return起到的作用和continue是相同的 语法
+                                    return;//Return serves the same syntax as continue
                                 }
                                 if (!classMap.containsKey(value)) {
                                     classMap.put(value, new ArrayList<>());
@@ -84,16 +86,16 @@ public class ExcelUtils {
                             }
                         }
                 );
-                //索引-->columns
+                //Index-->columns
                 Map<Integer, List<Field>> reflectionMap = new HashMap<>(16);
-                //默认读取第一个sheet
+                //The first sheet is read by default
                 Sheet sheet = workbook.getSheetAt(0);
 
                 boolean firstRow = true;
-                //按实际要求，从第三行开始获取
+                //As required, start with the third line
                 for (int i = sheet.getFirstRowNum() + 2; i <= sheet.getLastRowNum(); i++) {
                     Row row = sheet.getRow(i);
-                    //首行  提取注解
+                    //First line Extract annotations
                     if (firstRow) {
                         for (int j = row.getFirstCellNum(); j <= row.getLastCellNum(); j++) {
                             Cell cell = row.getCell(j);
@@ -104,13 +106,13 @@ public class ExcelUtils {
                         }
                         firstRow = false;
                     } else {
-                        //忽略空白行
+                        //Blank rows are ignored
                         if (row == null) {
                             continue;
                         }
                         try {
                             T t = cls.newInstance();
-                            //判断是否为空白行
+                            //Determine if the line is blank
                             boolean allBlank = true;
                             for (int j = row.getFirstCellNum(); j <= row.getLastCellNum(); j++) {
                                 if (reflectionMap.containsKey(j)) {
@@ -157,15 +159,7 @@ public class ExcelUtils {
         return dataList;
     }
 
-    /**
-     * 导出使用这个类
-     *
-     * @param fileName
-     * @param response
-     * @param dataList
-     * @param cls
-     * @param <T>
-     */
+
     public static <T> void writeExcel(String fileName, HttpServletResponse response, List<T> dataList, Class<T> cls) {
         Field[] fields = cls.getDeclaredFields();
         List<Field> fieldList = Arrays.stream(fields)
@@ -215,7 +209,7 @@ public class ExcelUtils {
                 cell.setCellStyle(cellStyle);
                 cell.setCellValue(columnName); // 设置表头1
 
-                // 如果有第二种表头设置的方法
+                // If there is a second method of header settings
                 if (annotation != null) {
                     String columnName2 = annotation.valueSelect();
                     if (!StringUtils.isBlank(columnName2)) {
@@ -228,8 +222,7 @@ public class ExcelUtils {
         }
         if (CollectionUtils.isNotEmpty(dataList)) {
 
-             /** @Description: 解决异常：https://blog.csdn.net/hoking_in/article/details/7919530
-             * @Author: weilian
+             /** @Description: Resolve exceptions：https://blog.csdn.net/hoking_in/article/details/7919530
              * @Date: 2020/12/18 15:49*/
 
             CellStyle cellStyle = wb.createCellStyle();
@@ -244,7 +237,7 @@ public class ExcelUtils {
                     try {
                         value = field.get(t);
                     } catch (Exception e) {
-                        log.error(e.getMessage(), e);// e.printStackTrace();
+                        log.error(e.getMessage(), e);
                     }
                     Cell cell = row1.createCell(aj.getAndIncrement());
                     cell.setCellStyle(cellStyle);
@@ -285,12 +278,6 @@ public class ExcelUtils {
         buildExcelFile(".\\default.xlsx" , wb);
     }
 
-    /**
-     * 生成excel文件
-     *
-     * @param path 生成excel路径
-     * @param wb
-     */
     private static void buildExcelFile(String path, Workbook wb) {
 
         File file = new File(path);
@@ -319,7 +306,7 @@ public class ExcelUtils {
             response.flushBuffer();
             wb.write(response.getOutputStream());
         } catch (IOException e) {
-            log.error(e.getMessage(), e);// e.printStackTrace();
+            log.error(e.getMessage(), e);
         }
     }
 
@@ -353,13 +340,6 @@ public class ExcelUtils {
         return StringUtils.stripEnd(propertyString.toString(), separator);
     }
 
-    /*
-     * @Description: 去掉字符串的换车符等
-     * @Param: [str]
-     * @return: java.lang.String
-     * @Author: weilian
-     * @Date: 2020/12/31 18:31
-     */
     public static String replaceBlank(String str) {
         String dest = "";
         if (str != null) {
@@ -380,7 +360,7 @@ public class ExcelUtils {
             } else {
                 //return new BigDecimal(cell.getNumericCellValue()).toString();
 
-                //解决数字的小数点显示问题及电话号等长数字的科学计数法显示问题
+                //Solve the problem of the display of decimal places in numbers and the display of scientific counting of long numbers such as telephone numbers
                 DataFormatter dataFormatter = new DataFormatter();
                 return dataFormatter.formatCellValue(cell);
             }
